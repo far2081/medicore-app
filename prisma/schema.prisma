@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Clinic {
+  id           String        @id @default(uuid())
+  name         String
+  domain       String?       @unique
+  plan         String        @default("Basic") // Basic, Standard, Premium
+  status       String        @default("Active") // Active, Inactive, Trial
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  users        User[]
+  patients     Patient[]
+  appointments Appointment[]
+  invoices     Invoice[]
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String
+  name         String
+  role         String        @default("Doctor") // SuperAdmin, ClinicAdmin, Doctor, Receptionist
+  clinicId     String?
+  clinic       Clinic?       @relation(fields: [clinicId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  appointments Appointment[] @relation("DoctorAppointments")
+}
+
+model Patient {
+  id        String        @id @default(uuid())
+  patientId String        @unique // e.g. PAT-1001
+  name      String
+  email     String?
+  phone     String?
+  age       Int?
+  gender    String?
+  history   String?
+  clinicId  String
+  clinic    Clinic        @relation(fields: [clinicId], references: [id])
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  appointments Appointment[]
+  invoices     Invoice[]
+}
+
+model Appointment {
+  id        String   @id @default(uuid())
+  date      DateTime
+  time      String
+  status    String   @default("Scheduled") // Scheduled, Completed, Cancelled
+  reason    String?
+  notes     String?
+  
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  
+  doctorId  String
+  doctor    User     @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  
+  clinicId  String
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Invoice {
+  id        String   @id @default(uuid())
+  amount    Float
+  status    String   @default("Unpaid") // Unpaid, Paid
+  date      DateTime @default(now())
+  
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  
+  clinicId  String
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
