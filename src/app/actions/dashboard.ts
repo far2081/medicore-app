@@ -142,3 +142,74 @@ export async function updatePatientHistory(patientId: string, history: string) {
     return { error: err.message || 'Failed to update patient prescription/history.' };
   }
 }
+
+export async function createPatient(formData: FormData) {
+  const name = formData.get('name') as string;
+  const email = formData.get('email') as string;
+  const phone = formData.get('phone') as string;
+  const ageStr = formData.get('age') as string;
+  const gender = formData.get('gender') as string;
+  const history = formData.get('history') as string;
+
+  if (!name) {
+    return { error: 'Patient name is required.' };
+  }
+
+  const age = ageStr ? parseInt(ageStr, 10) : null;
+
+  try {
+    // 1. Get the current clinic ID (first doctor user's clinic)
+    let doctor = await prisma.user.findFirst({
+      where: { role: { in: ['Doctor', 'ClinicAdmin'] } }
+    });
+
+    if (!doctor || !doctor.clinicId) {
+      // Find any clinic
+      const clinic = await prisma.clinic.findFirst();
+      if (!clinic) {
+        return { error: 'No clinic found in database. Please configure a clinic first.' };
+      }
+      // Create a default doctor in that clinic
+      doctor = await prisma.user.create({
+        data: {
+          name: 'Dr. Sarah Smith',
+          email: 'sarah.smith@medicore.pro',
+          password: 'password123',
+          role: 'Doctor',
+          clinicId: clinic.id
+        }
+      });
+    }
+
+    const clinicId = doctor.clinicId!;
+
+    // 2. Generate incremental Patient ID: e.g. PAT-1001
+    const count = await prisma.patient.count({
+      where: { clinicId }
+    });
+    const patientId = `PAT-${1001 + count}`;
+
+    // 3. Create Patient
+    await prisma.patient.create({
+      data: {
+        patientId,
+        name,
+        email: email || null,
+        phone: phone || null,
+        age,
+        gender: gender || null,
+        history: history || null,
+        clinicId
+      }
+    });
+
+    revalidatePath('/dashboard/patients');
+    revalidatePath('/dashboard/appointments');
+    revalidatePath('/dashboard/prescriptions');
+    revalidatePath('/dashboard/billing');
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message || 'Something went wrong.' };
+  }
+}
