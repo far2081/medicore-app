@@ -1,93 +1,85 @@
-"use client";
+'use server';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { 
-  Activity, LayoutDashboard, Users, Calendar, 
-  FileText, CreditCard, Settings, LogOut, Bell
-} from 'lucide-react';
+import { prisma } from '@/lib/prisma';
+import { revalidatePath } from 'next/cache';
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const pathname = usePathname();
+export async function createClinic(formData: FormData) {
+  const name = formData.get('name') as string;
+  const domainInput = formData.get('domain') as string;
+  const plan = formData.get('plan') as string;
+  const status = formData.get('status') as string;
 
-  const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-    { icon: Users, label: 'Patients', href: '/dashboard/patients' },
-    { icon: Calendar, label: 'Appointments', href: '/dashboard/appointments' },
-    { icon: FileText, label: 'Prescriptions', href: '/dashboard/prescriptions' },
-    { icon: CreditCard, label: 'Billing', href: '/dashboard/billing' },
-    { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
-  ];
+  if (!name || !domainInput) {
+    return { error: 'Please fill out all required fields.' };
+  }
 
-  return (
-    <div className="dashboard-layout">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <Activity color="var(--primary)" size={28} />
-          <span className="sidebar-logo-text">MediCore</span>
-        </div>
-        
-        <nav className="sidebar-nav">
-          <div style={{ padding: '0 1.5rem', marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-gray)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Menu
-          </div>
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
-            return (
-              <Link 
-                key={item.href} 
-                href={item.href}
-                className={`nav-item ${isActive ? 'active' : ''}`}
-              >
-                <item.icon size={20} />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+  const domain = domainInput.toLowerCase().replace(/\s+/g, '-');
 
-        <div style={{ padding: '1rem', borderTop: '1px solid var(--border-color)' }}>
-          <Link href="/login" className="nav-item" style={{ width: '100%', color: 'var(--danger)', justifyContent: 'flex-start' }}>
-            <LogOut size={20} />
-            Log Out
-          </Link>
-        </div>
-      </aside>
+  try {
+    const existing = await prisma.clinic.findUnique({
+      where: { domain },
+    });
 
-      {/* Main Content */}
-      <main className="main-content">
-        {/* Topbar */}
-        <header className="topbar">
-          <div style={{ fontWeight: 600, fontSize: '1.25rem', color: 'var(--text-dark)' }}>
-            City Hospital Clinic {/* Mock tenant name */}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <button style={{ color: 'var(--text-gray)', position: 'relative' }}>
-              <Bell size={24} />
-              <span style={{ position: 'absolute', top: 0, right: 0, width: '10px', height: '10px', backgroundColor: 'var(--danger)', borderRadius: '50%', border: '2px solid white' }}></span>
-            </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Dr. Sarah Smith</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-gray)' }}>Admin / Doctor</div>
-              </div>
-              <div className="avatar">
-                SS
-              </div>
-            </div>
-          </div>
-        </header>
+    if (existing) {
+      return { error: 'Domain already exists. Choose another one.' };
+    }
 
-        {/* Page Content */}
-        <div className="dashboard-page animate-fade-in">
-          {children}
-        </div>
-      </main>
-    </div>
-  );
+    await prisma.clinic.create({
+      data: {
+        name,
+        domain,
+        plan: plan || 'Basic',
+        status: status || 'Active',
+      },
+    });
+
+    revalidatePath('/admin/clinics');
+    revalidatePath('/admin');
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message || 'Something went wrong.' };
+  }
+}
+
+export async function updateClinicPlan(id: string, plan: string) {
+  try {
+    await prisma.clinic.update({
+      where: { id },
+      data: { plan },
+    });
+    revalidatePath('/admin/clinics');
+    revalidatePath('/admin');
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message || 'Failed to update plan.' };
+  }
+}
+
+export async function toggleClinicStatus(id: string, currentStatus: string) {
+  const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
+  try {
+    await prisma.clinic.update({
+      where: { id },
+      data: { status: newStatus },
+    });
+    revalidatePath('/admin/clinics');
+    revalidatePath('/admin');
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message || 'Failed to update status.' };
+  }
+}
+
+export async function deleteClinic(id: string) {
+  try {
+    // Delete clinic
+    await prisma.clinic.delete({
+      where: { id },
+    });
+    revalidatePath('/admin/clinics');
+    revalidatePath('/admin');
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message || 'Failed to delete clinic.' };
+  }
 }
