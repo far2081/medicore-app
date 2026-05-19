@@ -14,17 +14,35 @@ export async function signup(formData: FormData) {
   }
 
   try {
-    // 1. Create the Clinic
+    const domain = clinicName.toLowerCase().replace(/\s+/g, '-');
+
+    // 1. Check if email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+    if (existingUser) {
+      return { error: 'This email address is already registered. Please use a different email or log in.' };
+    }
+
+    // 2. Check if clinic domain already exists
+    const existingClinic = await prisma.clinic.findUnique({
+      where: { domain },
+    });
+    if (existingClinic) {
+      return { error: 'A clinic with this name already exists. Please choose a different clinic name.' };
+    }
+
+    // 3. Create the Clinic
     const clinic = await prisma.clinic.create({
       data: {
         name: clinicName,
-        domain: clinicName.toLowerCase().replace(/\s+/g, '-'),
+        domain,
         plan: 'Trial',
         status: 'Active',
       },
     });
 
-    // 2. Create the User (Clinic Admin)
+    // 4. Create the User (Clinic Admin)
     await prisma.user.create({
       data: {
         name,
@@ -35,7 +53,7 @@ export async function signup(formData: FormData) {
       },
     });
 
-    // 3. Redirect to login after successful signup
+    // 5. Redirect to login after successful signup
     return { success: true };
   } catch (error: any) {
     console.error('Signup error:', error);
