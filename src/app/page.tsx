@@ -6,26 +6,16 @@ export default function LandingPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {/* Header */}
-      <header style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        padding: '1.5rem 2rem',
-        backgroundColor: 'white',
-        borderBottom: '1px solid var(--border-color)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100
-      }}>
+      <header className="header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Activity color="var(--primary)" size={32} />
           <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>MediCore Pro</span>
         </div>
-        <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-          <Link href="#features" style={{ fontWeight: 500, color: 'var(--text-gray)' }}>Features</Link>
-          <Link href="#pricing" style={{ fontWeight: 500, color: 'var(--text-gray)' }}>Pricing</Link>
-          <Link href="#testimonials" style={{ fontWeight: 500, color: 'var(--text-gray)' }}>Testimonials</Link>
-          <div style={{ display: 'flex', gap: '1rem', marginLeft: '1rem' }}>
+        <nav className="header-nav">
+          <Link href="#features" className="header-link">Features</Link>
+          <Link href="#pricing" className="header-link">Pricing</Link>
+          <Link href="#testimonials" className="header-link">Testimonials</Link>
+          <div className="header-actions">
             <Link href="/login" className="btn btn-ghost">Log In</Link>
             <Link href="/signup" className="btn btn-primary">Start Free Trial</Link>
           </div>
@@ -35,17 +25,17 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-bg-shape"></div>
-        <div className="container grid md:grid-cols-2 items-center gap-8 animate-fade-in" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <div className="container grid grid-cols-1 md:grid-cols-2 items-center gap-8 animate-fade-in">
           <div className="hero-content">
             <h1 className="hero-title">Smart Healthcare SaaS Platform for Modern Clinics</h1>
             <p className="hero-subtitle">
               Manage your entire hospital or clinic from one powerful dashboard. Real-time appointments, secure patient records, automated billing, and insightful analytics.
             </p>
-            <div className="flex gap-4">
-              <Link href="/signup" className="btn btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.125rem' }}>
+            <div className="hero-buttons">
+              <Link href="/signup" className="btn btn-primary hero-btn">
                 Start 14-Day Free Trial <ChevronRight size={20} />
               </Link>
-              <Link href="/demo" className="btn btn-outline" style={{ padding: '1rem 2rem', fontSize: '1.125rem' }}>
+              <Link href="/demo" className="btn btn-outline hero-btn">
                 Request Demo
               </Link>
             </div>
