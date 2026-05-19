@@ -100,9 +100,14 @@ button {
   .grid-cols-2, .grid-cols-3, .grid-cols-4 { 
     grid-template-columns: 1fr; 
   }
+}
+
+@media (min-width: 769px) {
   .md\:grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
   .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  
+}
+
+@media (max-width: 768px) {
   .dashboard-layout {
     flex-direction: column;
   }
@@ -141,7 +146,8 @@ button {
     padding: 3rem 1rem;
   }
   .hero-title {
-    font-size: 2.25rem;
+    font-size: 2rem;
+    line-height: 1.2;
   }
   .container {
     padding: 0 1rem;
@@ -487,3 +493,112 @@ h3 { font-size: 1.5rem; margin-bottom: 0.5rem; }
   justify-content: center;
   font-weight: 600;
 }
+
+/* Premium Responsive Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 2rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+.header-nav {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.header-link {
+  font-weight: 500;
+  color: var(--text-gray);
+  transition: color 0.2s ease, transform 0.2s ease;
+  position: relative;
+}
+
+.header-link:hover {
+  color: var(--primary);
+}
+
+.header-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -4px;
+  left: 0;
+  background-color: var(--primary);
+  transition: width 0.2s ease;
+}
+
+.header-link:hover::after {
+  width: 100%;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-left: 1rem;
+}
+
+/* Hero CTA Buttons */
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.hero-btn {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+@media (max-width: 768px) {
+  .header {
+    position: relative; /* Remove sticky on mobile so it doesn't block the screen */
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .header-nav {
+    flex-direction: column;
+    width: 100%;
+    gap: 1rem;
+  }
+
+  .header-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  .header-link::after {
+    display: none;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .hero-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+
