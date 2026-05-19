@@ -52,10 +52,10 @@ export default function DashboardLayout({
         </nav>
 
         <div style={{ padding: '1rem', borderTop: '1px solid var(--border-color)' }}>
-          <button className="nav-item" style={{ width: '100%', color: 'var(--danger)', justifyContent: 'flex-start' }}>
+          <Link href="/login" className="nav-item" style={{ width: '100%', color: 'var(--danger)', justifyContent: 'flex-start' }}>
             <LogOut size={20} />
             Log Out
-          </button>
+          </Link>
         </div>
       </aside>
 

@@ -55,10 +55,10 @@ export default function AdminLayout({
         </nav>
 
         <div style={{ padding: '1rem', borderTop: '1px solid #1e293b' }}>
-          <button className="nav-item" style={{ width: '100%', color: '#ef4444', justifyContent: 'flex-start' }}>
+          <Link href="/login" className="nav-item" style={{ width: '100%', color: '#ef4444', justifyContent: 'flex-start' }}>
             <LogOut size={20} />
             Exit Admin
-          </button>
+          </Link>
         </div>
       </aside>
 
