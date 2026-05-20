@@ -64,6 +64,13 @@ export default function LandingPage() {
 
       {/* Features Section */}
       <section id="features" style={{ padding: '6rem 0', backgroundColor: 'white' }}>
+        <style dangerouslySetInnerHTML={{__html: `
+          @media (min-width: 769px) {
+            .force-one-line {
+              grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            }
+          }
+        `}} />
         <div className="container">
           <div className="text-center" style={{ marginBottom: '4rem' }}>
             <h2 style={{ fontSize: '2.5rem', color: 'var(--primary-dark)' }}>Everything you need to run your clinic</h2>
@@ -71,7 +78,7 @@ export default function LandingPage() {
               A complete suite of tools designed specifically for healthcare professionals to streamline daily operations.
             </p>
           </div>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-4 gap-4 force-one-line">
             {[
               { icon: Activity, title: 'Patient Management', desc: 'Securely manage medical records, history, and prescriptions with real-time access.' },
               { icon: Clock, title: 'Smart Appointments', desc: 'Automated scheduling with SMS/Email reminders to reduce no-shows.' },
