@@ -1,346 +1,231 @@
 'use client';
 
 import { useState } from 'react';
-import { Settings, Shield, CreditCard, Mail, Database, Save, Check } from 'lucide-react';
+import { CreditCard, ArrowUpRight, CheckCircle, RefreshCw, Users, Shield } from 'lucide-react';
+import { updateClinicPlan } from '../../actions/admin';
 
-export default function PlatformSettingsPage() {
-  const [activeTab, setActiveTab] = useState('general');
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+interface ClinicSub {
+  id: string;
+  name: string;
+  domain: string | null;
+  plan: string;
+  status: string;
+  createdAt: Date;
+}
 
-  // General settings state
-  const [platformName, setPlatformName] = useState('MediCore Global');
-  const [supportEmail, setSupportEmail] = useState('support@medicore.pro');
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [allowSignups, setAllowSignups] = useState(true);
+export default function SubscriptionsClient({ initialClinics }: { initialClinics: ClinicSub[] }) {
+  const [clinics, setClinics] = useState<ClinicSub[]>(initialClinics);
+  const [search, setSearch] = useState('');
+  const [filterPlan, setFilterPlan] = useState('All');
 
-  // API Credentials
-  const [stripeKey, setStripeKey] = useState('sk_test_51Nz...8x92');
-  const [smtpServer, setSmtpServer] = useState('smtp.mailgun.org');
-  const [smtpUser, setSmtpUser] = useState('postmaster@medicore.pro');
+  // Stats calculation
+  const stats = clinics.reduce((acc, clinic) => {
+    if (clinic.status !== 'Active') return acc;
+    if (clinic.plan === 'Basic') {
+      acc.mrr += 5000;
+      acc.basicCount += 1;
+    } else if (clinic.plan === 'Standard') {
+      acc.mrr += 15000;
+      acc.standardCount += 1;
+    } else if (clinic.plan === 'Premium') {
+      acc.mrr += 30000;
+      acc.premiumCount += 1;
+    } else {
+      acc.trialCount += 1;
+    }
+    return acc;
+  }, { mrr: 0, basicCount: 0, standardCount: 0, premiumCount: 0, trialCount: 0 });
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    }, 800);
+  const activeClinicsCount = clinics.filter(c => c.status === 'Active').length;
+
+  const handlePlanChange = async (id: string, newPlan: string) => {
+    const res = await updateClinicPlan(id, newPlan);
+    if (res.success) {
+      window.location.reload();
+    }
   };
+
+  const filtered = clinics.filter(c => {
+    const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase());
+    const matchesPlan = filterPlan === 'All' || c.plan === filterPlan;
+    return matchesSearch && matchesPlan;
+  });
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>Platform Settings</h1>
-          <p className="text-muted">Configure global application behavior, payment keys, security credentials, and email gateways.</p>
+          <h1 style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>Subscriptions Management</h1>
+          <p className="text-muted">Manage recurring plans, subscriptions billing, and SaaS plans metrics.</p>
         </div>
-        
-        {saveSuccess && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600 }}>
-            <Check size={16} /> Changes saved successfully!
-          </div>
-        )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: '2rem' }}>
-        {/* Settings Navigation Tabs */}
-        <aside className="card" style={{ height: 'fit-content', padding: '1rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <button 
-              onClick={() => setActiveTab('general')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem 1rem',
-                borderRadius: '8px',
-                width: '100%',
-                textAlign: 'left',
-                backgroundColor: activeTab === 'general' ? '#f1f5f9' : 'transparent',
-                fontWeight: activeTab === 'general' ? 600 : 500,
-                color: activeTab === 'general' ? '#0f172a' : 'var(--text-gray)',
-              }}
-            >
-              <Settings size={18} /> General System
-            </button>
-
-            <button 
-              onClick={() => setActiveTab('security')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem 1rem',
-                borderRadius: '8px',
-                width: '100%',
-                textAlign: 'left',
-                backgroundColor: activeTab === 'security' ? '#f1f5f9' : 'transparent',
-                fontWeight: activeTab === 'security' ? 600 : 500,
-                color: activeTab === 'security' ? '#0f172a' : 'var(--text-gray)',
-              }}
-            >
-              <Shield size={18} /> Platform Security
-            </button>
-
-            <button 
-              onClick={() => setActiveTab('payments')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem 1rem',
-                borderRadius: '8px',
-                width: '100%',
-                textAlign: 'left',
-                backgroundColor: activeTab === 'payments' ? '#f1f5f9' : 'transparent',
-                fontWeight: activeTab === 'payments' ? 600 : 500,
-                color: activeTab === 'payments' ? '#0f172a' : 'var(--text-gray)',
-              }}
-            >
-              <CreditCard size={18} /> Billing & Stripe
-            </button>
-
-            <button 
-              onClick={() => setActiveTab('mail')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem 1rem',
-                borderRadius: '8px',
-                width: '100%',
-                textAlign: 'left',
-                backgroundColor: activeTab === 'mail' ? '#f1f5f9' : 'transparent',
-                fontWeight: activeTab === 'mail' ? 600 : 500,
-                color: activeTab === 'mail' ? '#0f172a' : 'var(--text-gray)',
-              }}
-            >
-              <Mail size={18} /> SMTP & Email
-            </button>
-
-            <button 
-              onClick={() => setActiveTab('database')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem 1rem',
-                borderRadius: '8px',
-                width: '100%',
-                textAlign: 'left',
-                backgroundColor: activeTab === 'database' ? '#f1f5f9' : 'transparent',
-                fontWeight: activeTab === 'database' ? 600 : 500,
-                color: activeTab === 'database' ? '#0f172a' : 'var(--text-gray)',
-              }}
-            >
-              <Database size={18} /> System Diagnostics
-            </button>
+      {/* Subscription Stats cards */}
+      <div className="grid grid-cols-4 gap-4" style={{ marginBottom: '2rem' }}>
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div style={{ backgroundColor: 'rgba(30, 136, 229, 0.1)', padding: '0.5rem', borderRadius: '6px', color: 'var(--primary)' }}>
+              <CreditCard size={20} />
+            </div>
+            <span className="badge badge-success">+15.4%</span>
           </div>
-        </aside>
+          <h3 className="text-muted" style={{ fontSize: '0.875rem', fontWeight: 500 }}>Estimated Monthly Revenue</h3>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>Rs {stats.mrr.toLocaleString()}</div>
+        </div>
 
-        {/* Settings Tab Content */}
-        <div className="card" style={{ padding: '2rem' }}>
-          <form onSubmit={handleSave}>
-            {activeTab === 'general' && (
-              <div>
-                <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>General System Configuration</h2>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">SaaS Platform Name</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={platformName}
-                      onChange={(e) => setPlatformName(e.target.value)}
-                    />
-                  </div>
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div style={{ backgroundColor: 'rgba(38, 166, 154, 0.1)', padding: '0.5rem', borderRadius: '6px', color: 'var(--accent)' }}>
+              <CheckCircle size={20} />
+            </div>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-gray)' }}>Active tenants</span>
+          </div>
+          <h3 className="text-muted" style={{ fontSize: '0.875rem', fontWeight: 500 }}>Paid Subscriptions</h3>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{stats.basicCount + stats.standardCount + stats.premiumCount} / {activeClinicsCount}</div>
+        </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Support Email Address</label>
-                    <input 
-                      type="email" 
-                      className="form-input" 
-                      value={supportEmail}
-                      onChange={(e) => setSupportEmail(e.target.value)}
-                    />
-                  </div>
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', padding: '0.5rem', borderRadius: '6px', color: 'var(--warning)' }}>
+              <RefreshCw size={20} />
+            </div>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-gray)' }}>Free mode</span>
+          </div>
+          <h3 className="text-muted" style={{ fontSize: '0.875rem', fontWeight: 500 }}>Active Trial Accounts</h3>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{stats.trialCount} clinics</div>
+        </div>
+
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '0.5rem', borderRadius: '6px', color: 'var(--danger)' }}>
+              <Users size={20} />
+            </div>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-gray)' }}>Churn rate</span>
+          </div>
+          <h3 className="text-muted" style={{ fontSize: '0.875rem', fontWeight: 500 }}>SaaS Retention Rate</h3>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>98.2%</div>
+        </div>
+      </div>
+
+      {/* Plan Distribution Progress Bars */}
+      <div className="card" style={{ marginBottom: '2rem' }}>
+        <h3 style={{ fontSize: '1.125rem', marginBottom: '1.25rem' }}>Subscription Plans Distribution</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {[
+            { name: 'Trial Plan (Free)', count: stats.trialCount, price: 'Rs 0', color: 'var(--text-gray)', total: clinics.length },
+            { name: 'Basic Plan', count: stats.basicCount, price: 'Rs 5,000 / mo', color: 'var(--primary)', total: clinics.length },
+            { name: 'Standard Plan', count: stats.standardCount, price: 'Rs 15,000 / mo', color: 'var(--accent)', total: clinics.length },
+            { name: 'Premium Plan', count: stats.premiumCount, price: 'Rs 30,000 / mo', color: 'var(--warning)', total: clinics.length },
+          ].map((item, idx) => {
+            const pct = item.total > 0 ? (item.count / item.total) * 100 : 0;
+            return (
+              <div key={idx}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
+                  <span style={{ fontWeight: 600 }}>{item.name} <span style={{ color: 'var(--text-gray)', fontWeight: 400 }}>({item.price})</span></span>
+                  <span>{item.count} clinics ({pct.toFixed(0)}%)</span>
                 </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                    <div>
-                      <div style={{ fontWeight: 600 }}>Enable Maintenance Mode</div>
-                      <div style={{ fontSize: '0.875rem', color: 'var(--text-gray)' }}>Redirects all public and tenant links to a maintenance screen.</div>
-                    </div>
-                    <input 
-                      type="checkbox" 
-                      checked={maintenanceMode}
-                      onChange={(e) => setMaintenanceMode(e.target.checked)}
-                      style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                    />
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                    <div>
-                      <div style={{ fontWeight: 600 }}>Allow New Registrations (SaaS Signup)</div>
-                      <div style={{ fontSize: '0.875rem', color: 'var(--text-gray)' }}>Turn this off to temporarily freeze new clinic signups on your homepage.</div>
-                    </div>
-                    <input 
-                      type="checkbox" 
-                      checked={allowSignups}
-                      onChange={(e) => setAllowSignups(e.target.checked)}
-                      style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'security' && (
-              <div>
-                <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>Security & Auth Parameters</h2>
-                
-                <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                  <label className="form-label">Session Idle Timeout (Minutes)</label>
-                  <input type="number" className="form-input" defaultValue={120} style={{ maxWidth: '200px' }} />
-                  <span style={{ fontSize: '0.875rem', color: 'var(--text-gray)', marginTop: '0.25rem', display: 'block' }}>Automatically signs out inactive users.</span>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                    <div>
-                      <div style={{ fontWeight: 600 }}>Enforce Two-Factor Authentication (2FA)</div>
-                      <div style={{ fontSize: '0.875rem', color: 'var(--text-gray)' }}>Force all Super Admin and Clinic Admin accounts to log in with an authenticator app.</div>
-                    </div>
-                    <input type="checkbox" defaultChecked={false} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-                    <div>
-                      <div style={{ fontWeight: 600 }}>IP Access Restricted Firewall</div>
-                      <div style={{ fontSize: '0.875rem', color: 'var(--text-gray)' }}>Block access to `/admin` routes from unrecognized public IP networks.</div>
-                    </div>
-                    <input type="checkbox" defaultChecked={false} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
-                  </div>
+                <div style={{ width: '100%', height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ width: `${pct}%`, height: '100%', backgroundColor: item.color, borderRadius: '4px', transition: 'width 0.4s' }}></div>
                 </div>
               </div>
-            )}
+            );
+          })}
+        </div>
+      </div>
 
-            {activeTab === 'payments' && (
-              <div>
-                <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>Stripe & Subscriptions Gateways</h2>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Stripe Live Secret Key</label>
-                    <input 
-                      type="password" 
-                      className="form-input" 
-                      value={stripeKey} 
-                      onChange={(e) => setStripeKey(e.target.value)}
-                    />
-                  </div>
+      {/* List */}
+      <div className="card">
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontSize: '1.125rem' }}>Billing Tenants & Plans</h3>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <input 
+              type="text" 
+              placeholder="Search clinic name..." 
+              className="form-input" 
+              style={{ width: '250px', padding: '0.5rem' }} 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <select 
+              className="form-input" 
+              style={{ width: 'auto', padding: '0.5rem' }}
+              value={filterPlan}
+              onChange={(e) => setFilterPlan(e.target.value)}
+            >
+              <option value="All">All Plans</option>
+              <option value="Trial">Trial</option>
+              <option value="Basic">Basic</option>
+              <option value="Standard">Standard</option>
+              <option value="Premium">Premium</option>
+            </select>
+          </div>
+        </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Stripe Webhook Secret (Signing secret)</label>
-                    <input type="password" className="form-input" placeholder="whsec_..." />
-                  </div>
+        <div className="table-container">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Clinic</th>
+                <th>Current Plan</th>
+                <th>Price Rate</th>
+                <th>Billing status</th>
+                <th>Enrolled Date</th>
+                <th>Change Plan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((clinic) => {
+                let rate = 'Rs 0 / month';
+                if (clinic.plan === 'Basic') rate = 'Rs 5,000 / month';
+                else if (clinic.plan === 'Standard') rate = 'Rs 15,000 / month';
+                else if (clinic.plan === 'Premium') rate = 'Rs 30,000 / month';
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div className="form-group">
-                      <label className="form-label">Basic Plan Price ID (Monthly)</label>
-                      <input type="text" className="form-input" placeholder="price_1H..." />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Standard Plan Price ID (Monthly)</label>
-                      <input type="text" className="form-input" placeholder="price_2H..." />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'mail' && (
-              <div>
-                <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>SMTP Transporter Configuration</h2>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">SMTP Gateway Host</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={smtpServer}
-                      onChange={(e) => setSmtpServer(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">SMTP Authentication User</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={smtpUser}
-                      onChange={(e) => setSmtpUser(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">SMTP Password</label>
-                    <input type="password" className="form-input" placeholder="••••••••••••••••••••" />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">SMTP Port</label>
-                    <input type="number" className="form-input" defaultValue={587} />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'database' && (
-              <div>
-                <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>System Diagnostics & DB Status</h2>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', margin: '1rem 0' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', borderBottom: '1px solid var(--border-color)' }}>
-                    <span style={{ fontWeight: 600 }}>Database Engine</span>
-                    <span style={{ color: 'var(--success)', fontWeight: 600 }}>PostgreSQL</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', borderBottom: '1px solid var(--border-color)' }}>
-                    <span style={{ fontWeight: 600 }}>Prisma Client version</span>
-                    <span>v6.0.0</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', borderBottom: '1px solid var(--border-color)' }}>
-                    <span style={{ fontWeight: 600 }}>NextJS Server Mode</span>
-                    <span>Server-Side App Router (Node.js 20+)</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', borderBottom: '1px solid var(--border-color)' }}>
-                    <span style={{ fontWeight: 600 }}>Active Connection Pools</span>
-                    <span style={{ color: 'var(--success)' }}>Stable (Pool Size: 10)</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab !== 'database' && (
-              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
-                <button 
-                  type="submit" 
-                  className="btn btn-primary"
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#0f172a' }}
-                  disabled={isSaving}
-                >
-                  <Save size={18} /> {isSaving ? 'Saving Configurations...' : 'Save Configuration'}
-                </button>
-              </div>
-            )}
-          </form>
+                return (
+                  <tr key={clinic.id}>
+                    <td style={{ fontWeight: 600 }}>{clinic.name}</td>
+                    <td>
+                      <span className={`badge ${
+                        clinic.plan === 'Premium' ? 'badge-warning' : 
+                        clinic.plan === 'Standard' ? 'badge-primary' : 
+                        clinic.plan === 'Basic' ? 'badge-success' : 'badge-ghost'
+                      }`} style={{ textTransform: 'uppercase', fontSize: '0.75rem' }}>
+                        {clinic.plan}
+                      </span>
+                    </td>
+                    <td style={{ fontWeight: 500 }}>{rate}</td>
+                    <td>
+                      <span className={`badge ${clinic.status === 'Active' ? 'badge-success' : 'badge-danger'}`}>
+                        {clinic.status === 'Active' ? 'Active Billing' : 'Suspended'}
+                      </span>
+                    </td>
+                    <td style={{ color: 'var(--text-gray)', fontSize: '0.875rem' }}>
+                      {new Date(clinic.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                    </td>
+                    <td>
+                      <select 
+                        value={clinic.plan} 
+                        onChange={(e) => handlePlanChange(clinic.id, e.target.value)}
+                        className="form-input" 
+                        style={{ padding: '0.25rem 0.5rem', width: 'auto', fontSize: '0.875rem' }}
+                      >
+                        <option value="Trial">Trial</option>
+                        <option value="Basic">Basic (Rs 5,000)</option>
+                        <option value="Standard">Standard (Rs 15,000)</option>
+                        <option value="Premium">Premium (Rs 30,000)</option>
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-gray)' }}>
+                    No matching billing accounts found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
