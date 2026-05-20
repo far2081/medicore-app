@@ -71,7 +71,7 @@ export default function LandingPage() {
               A complete suite of tools designed specifically for healthcare professionals to streamline daily operations.
             </p>
           </div>
-          <div className="grid grid-cols-4 gap-8">
+          <div className="grid grid-cols-4 gap-4">
             {[
               { icon: Activity, title: 'Patient Management', desc: 'Securely manage medical records, history, and prescriptions with real-time access.' },
               { icon: Clock, title: 'Smart Appointments', desc: 'Automated scheduling with SMS/Email reminders to reduce no-shows.' },
