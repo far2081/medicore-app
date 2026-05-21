@@ -72,7 +72,7 @@ export default function TermsPage() {
       {/* Footer */}
       <footer style={{ backgroundColor: '#0f172a', color: 'white', padding: '2rem 0', textAlign: 'center', fontSize: '0.875rem' }}>
         <div className="container">
-          <p style={{ color: '#94a3b8' }}>&copy; {new Date().getFullYear()} MediCore Pro SaaS. Terms & Agreement.</p>
+          <p style={{ color: "#94a3b8" }}>&copy; {new Date().getFullYear()} MediCore Pro SaaS. Terms & Agreement. Created by Farhana Aamir | Contact: <a href="mailto:farzunmir@gmail.com" style={{ color: "var(--primary-light)" }}>farzunmir@gmail.com</a></p>
         </div>
       </footer>
     </div>

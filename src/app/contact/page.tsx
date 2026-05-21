@@ -99,7 +99,7 @@ export default function ContactPage() {
               </div>
 
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '2rem', marginTop: '3rem', fontSize: '0.875rem', color: '#64748b', position: 'relative', zIndex: 1 }}>
-                &copy; {new Date().getFullYear()} MediCore Inc. Trusted by healthcare institutions worldwide.
+                &copy; {new Date().getFullYear()} MediCore Inc. Created by Farhana Aamir | Contact: <a href="mailto:farzunmir@gmail.com" style={{ color: "var(--primary-light)" }}>farzunmir@gmail.com</a>
               </div>
             </div>
 
