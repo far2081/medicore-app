@@ -12,9 +12,9 @@ export default function LandingPage() {
           <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary-dark)' }}>MediCore Pro</span>
         </div>
         <nav className="header-nav">
-          <Link href="#features" className="header-link">Features</Link>
-          <Link href="#pricing" className="header-link">Pricing</Link>
-          <Link href="#testimonials" className="header-link">Testimonials</Link>
+          <Link href="/#features" className="header-link">Features</Link>
+          <Link href="/#pricing" className="header-link">Pricing</Link>
+          <Link href="/#testimonials" className="header-link">Testimonials</Link>
           <div className="header-actions">
             <Link href="/login" className="btn btn-ghost">Log In</Link>
             <Link href="/signup" className="btn btn-primary">Start Free Trial</Link>
@@ -167,8 +167,8 @@ export default function LandingPage() {
             <div>
               <h4 style={{ fontSize: '1.125rem', marginBottom: '1.5rem', fontWeight: 600 }}>Product</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, color: '#94a3b8', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <li><Link href="#features">Features</Link></li>
-                <li><Link href="#pricing">Pricing</Link></li>
+                <li><Link href="/#features">Features</Link></li>
+                <li><Link href="/#pricing">Pricing</Link></li>
                 <li><Link href="/security">Security</Link></li>
               </ul>
             </div>
